@@ -1469,3 +1469,56 @@ INFO:     192.168.10.160:52349 - "POST /validate/stateflow_data_name HTTP/1.1" 2
 INFO:     192.168.10.160:52349 - "POST /validate/stateflow_data_name HTTP/1.1" 200 OK
 INFO:     192.168.10.160:52349 - "POST /validate/stateflow_data_name HTTP/1.1" 200 OK
 INFO:     192.168.10.160:52349 - "POST /validate/stateflow_data_name HTTP/1.1" 200 OK
+Extracted JSON (length 1132):
+'{\n  "usable_characters_for_file_names": {\n    "description": "File names shall only use single-byte alphanumeric characters (a-z, A-Z, 0-9) and single-byte underscore (_). Line breaks, spaces, double-byte characters, and control characters are prohibited.",\n  },\n  "no_numbers_at_start": {\n    "description": "File name shall not begin with a number.",\n  },\n  "no_underscore_at_start": {\n    "description": "File name shall not begin with an underscore.",\n  },\n  "no_underscore_at_end": {\n    "description": "File name shall not end with an underscore.", \n\n  },\n  "no_consecutive_underscores": {\n    "description": "File name shall not contain consecutive underscores.",\n  },\n  "not_reserved_matlab_word": {\n    "description": "File name shall not be solely a reserved MATLAB keyword.",\n  },\n  "unique_file_name_on_path": {\n    "description": "File names on the MATLAB path shall be unique; duplicate names are not allowed.",\n  },\n  "max_model_file_name_length": {\n    "description": "Model file name length shall be a maximum of 63 characters, excluding dots and file extension.",\n    "params": {\n      "max_length": 63\n    }\n  }\n}'
+INFO:     192.168.10.71:37864 - "GET / HTTP/1.1" 200 OK
+INFO:     192.168.10.71:37878 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.10.71:37886 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.10.71:37886 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.9.66:60706 - "GET /index HTTP/1.1" 200 OK
+INFO:     192.168.9.66:60706 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.9.66:60706 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.9.66:58363 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.9.66:64214 - "GET /maab HTTP/1.1" 200 OK
+INFO:     192.168.9.66:64214 - "GET /style.css HTTP/1.1" 404 Not Found
+INFO:     192.168.9.66:64214 - "GET /components HTTP/1.1" 200 OK
+INFO:     192.168.10.160:61358 - "GET /index HTTP/1.1" 200 OK
+INFO:     192.168.10.160:61358 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.10.160:61358 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.10.160:61359 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.10.160:61359 - "GET /fields/abs HTTP/1.1" 200 OK
+INFO:     192.168.9.66:55622 - "POST /validate/folder_name HTTP/1.1" 200 OK
+INFO:     192.168.9.66:54421 - "POST /validate/subsystem_name HTTP/1.1" 200 OK
+INFO:     192.168.10.160:61368 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.66:52643 - "POST /validate/file_name HTTP/1.1" 200 OK
+INFO:     192.168.9.66:58790 - "GET /fields/abs HTTP/1.1" 200 OK
+INFO:     192.168.10.111:53757 - "GET /index HTTP/1.1" 200 OK
+INFO:     192.168.10.111:63555 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     192.168.10.111:61770 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.10.111:61770 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.10.111:55342 - "GET /fields/internal HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63105 - "GET /index HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63105 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63105 - "GET /standards HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34714 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34714 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     192.168.10.111:65230 - "POST /generate-variable-name/internal/internal HTTP/1.1" 200 OK
+INFO:     192.168.9.66:49314 - "GET /fields/abs HTTP/1.1" 200 OK
+INFO:     192.168.9.66:49669 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:57156 - "GET /fields/abs HTTP/1.1" 200 OK
+INFO:     192.168.10.111:49833 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:49392 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:49392 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:61016 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:65056 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63487 - "GET /index HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63487 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63487 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.10.111:60247 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.66:63487 - "GET /fields/abs HTTP/1.1" 200 OK
+INFO:     192.168.10.111:60247 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:58526 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:58526 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:64656 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:62617 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.10.111:63188 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK

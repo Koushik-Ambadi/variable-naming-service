@@ -34,11 +34,11 @@
 "Real Time Clock Manager": "Rtcmgr",
 "Current Sensor": "Shunt",
 "State of Charge": "Soc",
-"State of Health": "Soh",
+"State of Health Capacity": "Sohc",
+"State of Health Resistance": "Sohr",
 "Safety Restraint System": "Srs",
 "System Manager": "Sysmgr",
 "Thermal Management": "Therm",
 "Temperature Monitor": "Tmpmnt",
 "Useable Energy Prediction Module ": "Uepm"
-
 }

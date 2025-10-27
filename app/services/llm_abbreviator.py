@@ -134,7 +134,6 @@ generate a variable name for the description: "this file stores the data related
 output should be in json format only like this:
 {  "final_variable": "VehSpdAccDataFile"}
 """
-print(get_abbreviation_from_llm_local("", {}))
 
 
 

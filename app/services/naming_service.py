@@ -3,7 +3,6 @@ import json
 import re
 
 import os
-from app.services.llm_abbreviator import get_abbreviation_from_llm_local
 
 class NamingService:
 
