@@ -1,6 +1,13 @@
 {
     "current": "cur",
-    "stateofcharge": "soc",
+    "stateofcharge": "SOC",
+    "soc": "SOC",
+    "soe": "SOE",
+    "soh": "SOH",
+    "stateofhealth": "SOH",
+    "stateofenergy": "SOE",
+    "stateofhealthcapacity": "SOHC",
+    "sohc": "SOHC",
     "0": "0",
     "1": "1",
     "2": "2",
@@ -1286,5 +1293,7 @@
     "xposition": "Xpos",
     "yaw": "Yaw",
     "year": "Yr",
-    "yposition": "Ypos"
+    "yposition": "Ypos",
+    "LaSohc_pct_curHysErr": "Current Hysteresis Error ",
+    "kwh": "Kwh"
 }

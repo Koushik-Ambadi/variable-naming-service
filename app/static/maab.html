@@ -1,3 +1,4 @@
+<!-- app/static/maab.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,21 +12,27 @@
 
 <div class="container mt-5">
   <div class="card main-card shadow p-4">
-    <h2 class="mb-4">MAAB Variable Name Validator</h2>
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <h2 class="mb-0">MAAB Variable Name Validator</h2>
+      <small class="text-muted">Validate one name at a time</small>
+    </div>
 
     <div class="mb-3">
-      <label for="component" class="form-label">Select Component:</label>
+      <label for="component" class="form-label">Component</label>
       <select id="component" class="form-select">
         <option value="">Loading components...</option>
       </select>
     </div>
 
     <div class="mb-3">
-      <label for="variableName" class="form-label">Enter Variable Name:</label>
+      <label for="variableName" class="form-label">Variable Name</label>
       <input type="text" id="variableName" class="form-control" placeholder="Enter variable name" disabled />
     </div>
 
-    <button id="validate-btn" class="btn btn-primary" disabled>Validate</button>
+    <div class="d-flex gap-2">
+      <button id="validate-btn" class="btn btn-primary" disabled>Validate</button>
+      <button id="clear-btn" class="btn btn-outline-secondary" type="button">Clear</button>
+    </div>
 
     <div id="results-container" class="mt-4 d-none">
       <h4>Validation Results</h4>
@@ -40,6 +47,7 @@
   const componentSelect = document.getElementById('component');
   const variableNameInput = document.getElementById('variableName');
   const validateBtn = document.getElementById('validate-btn');
+  const clearBtn = document.getElementById('clear-btn');
   const resultsContainer = document.getElementById('results-container');
   const resultsDiv = document.getElementById('results');
 
@@ -55,7 +63,7 @@
         opt.value = comp;
         opt.textContent = comp;
         componentSelect.appendChild(opt);
-      });
+      }); 
 
       componentSelect.disabled = false;
     } catch (err) {
@@ -112,6 +120,12 @@
       alert("Error validating name. See console for details.");
       console.error(err);
     }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    variableNameInput.value = '';
+    resultsContainer.classList.add('d-none');
+    resultsDiv.innerHTML = '';
   });
 
   function displayResults(data) {

@@ -5,10 +5,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Admin - Pending Variables</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="style.css" rel="stylesheet"/>
   <style>
     body {
       background-color: #f8f9fa;
@@ -110,15 +108,25 @@
         } else {
           for (const v in data) {
             const li = document.createElement("li");
+
+            const label = document.createElement("label");
+            label.style.cursor = "pointer"; // shows hand cursor when hovering
+            label.classList.add("d-block"); // full width clickable area
+
             const cb = document.createElement("input");
             cb.type = "checkbox";
             cb.value = v;
-            li.appendChild(cb);
-            li.appendChild(
-              document.createTextNode(` ${v} — ${data[v]}`)
-            );
+            cb.classList.add("me-2");
+
+            // Append checkbox and text to the label
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(`${v} — ${data[v]}`));
+
+            // Append label to list item
+            li.appendChild(label);
             pendingList.appendChild(li);
           }
+
         }
         actionButtons.classList.remove("d-none");
       } catch (err) {

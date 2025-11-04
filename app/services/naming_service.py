@@ -1,44 +1,30 @@
-#app/services/naming_service.py
+# app/services/naming_service.py
 import json
 import re
-
 import os
 
 class NamingService:
 
-    # Add this at the top, right after class definition
-    STOPWORDS = ["a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
-    "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being",
-    "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't",
-    "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during",
-    "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't",
-    "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here",
-    "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i",
-    "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's",
-    "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself",
-    "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought",
-    "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she",
-    "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than",
-    "that", "that's", "the", "their", "theirs", "them", "themselves", "then",
-    "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've",
-    "this", "those", "through", "to", "too", "under", "until", "up", "very", "was",
-    "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what",
-    "what's", "when", "when's", "where", "where's", "which", "while", "who",
-    "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you",
-    "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves","used","in",    "of", "for", "with", "from", "to", "by", "on", "in", "at", "as", "into", "over", 
-    "under", "between", "through", "via", "about", "per", "within", "without", "along", 
-    "across", "among", "behind", "against", "toward", "up", "down", "around", "near", 
-    "inside", "outside"    "of", "for", "with", "from", "to", "by", "on", "in", "at", "as", "into", "over", 
-    "under", "between", "through", "via", "about", "per", "within", "without", "along", 
-    "across", "among", "behind", "against", "toward", "up", "down", "around", "near", 
-    "inside", "outside",
-    "is", "was", "are", "were", "be", "been", "being",
-    "have", "has", "had", "having",
-    "is", "are", "was", "were", "be", "been", "being",
-    "have", "has", "had", "having","of", "for", "with", "from", "to", "by", "on", "in", "at", "as", "into", "over", 
-    "under", "between", "through", "via", "about", "per", "within", "without", "along", 
-    "across", "among", "behind", "against", "toward", "up", "down", "around", "near", 
-    "inside", "outside"   
+# Variable Naming Logic:
+
+    STOPWORDS = [
+        "a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
+        "any", "are", "as", "at", "be", "because", "been", "before", "being",
+        "below", "between", "both", "but", "by", "do", "does", "doing", "down", "during",
+        "each", "few", "for", "from", "further", "had", "has", "have", "he", "her", "here",
+        "hers", "herself", "him", "himself", "his", "how", "i", "if", "in", "into", "is",
+        "it", "its", "itself", "let's", "me", "more", "most", "my", "myself",
+        "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other",
+        "our", "ours", "ourselves", "out", "over", "own", "same", "she",
+        "should", "so", "some", "such", "than", "that", "the", "their", "theirs",
+        "them", "themselves", "then", "there", "these", "they", "this", "those",
+        "through", "to", "too", "under", "until", "up", "very", "was", "we",
+        "were", "what", "when", "where", "which", "while", "who", "whom", "why",
+        "with", "would", "you", "your", "yours", "yourself", "yourselves",
+        "used", "in", "of", "for", "with", "from", "to", "by", "on", "at", "as",
+        "into", "over", "under", "between", "through", "via", "about", "per",
+        "within", "without", "along", "across", "among", "behind", "against",
+        "toward", "up", "down", "around", "near", "inside", "outside"
     ]
 
     def __init__(self, format: str = "abs", standard: str = "autosar"):
@@ -51,12 +37,14 @@ class NamingService:
         self.template = self.config["template"]
         self.mappings = self._load_all_mappings()
 
+        # Define data path for storing the endpoint counts
+        self.data_path = os.path.join(os.getcwd(), "data")  # This is where 'endpoint_counts.json' will be stored
+        self.endpoint_counts_path = os.path.join(self.data_path, "endpoint_counts.json")
 
     def _load_json(self, relative_path: str):
         full_path = os.path.join(self.base_path, relative_path)
         with open(full_path, "r") as f:
             return json.load(f)
-
 
     def _load_all_mappings(self):
         mappings = {}
@@ -66,21 +54,16 @@ class NamingService:
                 mappings[field] = self._load_json(f"{field}s.json")
         return mappings
 
-
     def _load_abbreviation(self, standard: str):
-        """Load abbreviation from the JSON file for the selected standard"""
         abbr_path = os.path.join(os.getcwd(), f"data/standards/{standard}/abbreviation.json")
         if os.path.exists(abbr_path):
             with open(abbr_path, "r") as f:
                 return {k.lower(): v for k, v in json.load(f).items()}
         return {}
 
-
     def _add_new_abbreviations(self, standard: str, new_abbrs: dict):
-        """Append multiple newly generated LLM entries to pending.json as key-value pairs"""
         pending_path = os.path.join(os.getcwd(), f"data/standards/{standard}/pending.json")
 
-        # Load existing pending entries
         if os.path.exists(pending_path):
             with open(pending_path, "r") as f:
                 try:
@@ -90,19 +73,65 @@ class NamingService:
         else:
             pending = {}
 
-        # Add only entries that are not already present
         updated = False
         for word, abbr in new_abbrs.items():
             if word not in pending:
                 pending[word] = abbr
                 updated = True
 
-        # Save only if something new was added
         if updated:
             with open(pending_path, "w") as f:
                 json.dump(pending, f, indent=4)
 
+    def gen_var_name(self, standard: str = None, **kwargs):
+        standard = standard or self.standard
+        abbreviations = self._load_abbreviation(standard)
 
+        values = {}
+        autosar_matches = []
+        new_abbreviations = {}
+
+        for field in self.fields:
+            user_input = kwargs.get(field, "")
+
+            if field == "description":
+                tokens = user_input.split()
+                final_tokens = []
+
+                for token in tokens:
+                    token_lower = token.lower()
+                    if token_lower in abbreviations:
+                        abbr = abbreviations[token_lower]
+                        autosar_matches.append({
+                            "word": token,
+                            "replacement": abbr,
+                        })
+                    elif token_lower in self.STOPWORDS:
+                        abbr = ""
+                    else:
+                        first = token_lower[0]
+                        rest = re.sub(r'[aeiou]', '', token_lower[1:])
+                        rest = re.sub(r'(.)\1+', r'\1', rest)
+                        abbr = (first + rest)[:4].capitalize()
+                        new_abbreviations[token_lower] = abbr
+
+                    final_tokens.append(abbr)
+
+                final_variable = "".join([t for t in final_tokens if t])
+                if new_abbreviations:
+                    self._add_new_abbreviations(standard, new_abbreviations)
+                values[field] = final_variable
+            else:
+                mapping = self.mappings.get(field, {})
+                values[field] = mapping.get(user_input, user_input)
+
+        variable_name = self.template.format(**values)
+        return {
+            "variable_name": variable_name,
+            "autosar_matches": autosar_matches
+        }
+
+# Admin Logic:
 
     def _approve_pending_abbreviations(self, standard: str, to_approve: list):
         """
@@ -179,59 +208,32 @@ class NamingService:
 
 
 
-    def gen_var_name(self, standard: str = None, **kwargs):
-        """
-        Generate PascalCase variable name based on description.
-        Uses known abbreviations, ignores stopwords, and generates abbreviations for unknown words.
-        Compatible with your previous API call.
-        """
-        standard = standard or self.standard
-        abbreviations = self._load_abbreviation(standard)
+# EndpointUsageTracker:
+    def update_endpoint_count(self, endpoint: str):
+        """This function updates the count of hits for a given endpoint."""
+        
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
+        
+        # Load the existing endpoint counts
+        if os.path.exists(self.endpoint_counts_path):
+            try:
+                with open(self.endpoint_counts_path, "r", encoding="utf-8") as f:
+                    endpoint_counts = json.load(f)
+            except json.JSONDecodeError:
+                endpoint_counts = {}
+        else:
+            endpoint_counts = {}
 
-        values = {}
+        # Increment the count for the given endpoint
+        if endpoint in endpoint_counts:
+            endpoint_counts[endpoint] += 1
+        else:
+            endpoint_counts[endpoint] = 1
 
-        for field in self.fields:
-            user_input = kwargs.get(field, "")
-
-            if field == "description":
-                tokens = user_input.split()
-                final_tokens = []
-                new_abbreviations = {}
-
-                for token in tokens:
-                    token_lower = token.lower()
-                    if token_lower in abbreviations:
-                        abbr = abbreviations[token_lower]
-                    elif token_lower in self.STOPWORDS:
-                        abbr = ""  # ignore stopwords
-                    else:
-                        # Generate abbreviation
-                        first = token_lower[0]
-                        rest = re.sub(r'[aeiou]', '', token_lower[1:])
-                        rest = re.sub(r'(.)\1+', r'\1', rest)  # remove repeated letters
-                        abbr = (first + rest)[:4].capitalize()
-                        new_abbreviations[token_lower] = abbr
-                    final_tokens.append(abbr)
-
-                final_variable = "".join([t for t in final_tokens if t])
-
-                # Save newly generated abbreviations if needed
-                if new_abbreviations:
-                    self._add_new_abbreviations(standard, new_abbreviations)
-
-                values[field] = final_variable
-
-            else:
-                mapping = self.mappings.get(field, {})
-                values[field] = mapping.get(user_input, user_input)
-
-        return self.template.format(**values)
-    
-
-
-
-
-
-
-
-
+        # Save the updated counts back to the file
+        try:
+            with open(self.endpoint_counts_path, "w", encoding="utf-8") as f:
+                json.dump(endpoint_counts, f, indent=4)
+        except Exception as e:
+            print(f"Error saving endpoint counts: {e}")

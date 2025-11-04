@@ -1,85 +1,63 @@
-/* General body style */
-body {
-  background-color: #f8f9fa;
-  font-size: 1.05rem;
-}
-
-/* Reusable card style */
-.card {
-  border-radius: 10px;
-}
-
-/* Main container card for form */
+/* --- consistent main card used across pages --- */
 .main-card {
-  max-width: 700px;
-  margin: 40px auto;
+  max-width: 900px;
+  margin: 20px auto;
+  border-radius: 12px;
   padding: 20px;
 }
 
-/* Form label styling */
-.form-label {
-  font-weight: 600;
+/* slightly larger body text and consistent background */
+body {
+  background-color: #f8f9fa;
+  font-size: 1rem;
+  padding-bottom: 40px;
 }
 
-.form-group {
-  margin-bottom: 1rem;
+/* small helper text */
+.small.text-muted {
+  font-size: 0.9rem;
 }
 
-/* Input and button spacing */
-button.btn {
-  font-size: 1.05rem;
-  padding: 10px 20px;
-}
-
-/* Responsive form layout container */
-#fields-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-/* Results grid container */
-#results {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-@media (max-width: 700px) {
-  #results {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Individual result card */
-.result-card {
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Passed/Failed badge colors */
-.result-card .badge.bg-success {
-  background-color: #28a745 !important;
-}
-
-.result-card .badge.bg-danger {
-  background-color: #dc3545 !important;
-}
-
-/* Bold result value */
+/* result alert styling */
 #result {
-  font-weight: bold;
-  font-size: 1.1rem;
+  word-break: break-word;
 }
 
-/* Limit width for main layout container */
-.container.mt-5 {
-  max-width: 700px;
-  margin-top: 2rem !important;
-  margin-bottom: 2rem !important;
+/* fields container spacing already exists; ensure inputs stretch full width */
+#fields-container .mb-3 > .form-control,
+#fields-container .mb-3 > .form-select {
+  width: 100%;
 }
+
+/* result cards already defined; ensure consistent spacing */
+.result-card {
+  background-color: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+}
+
+/* copy button small feedback */
+#copy-btn {
+  white-space: nowrap;
+}
+
+/* make action area clearer on mobile */
+@media (max-width: 576px) {
+  .main-card { padding: 16px; }
+  .row.g-3 { gap: .5rem; }
+}
+
+/* preserve previously moved admin styles as well */
+.standard-btn { margin: 5px; }
+#pending-list li {
+  padding: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  background-color: white;
+}
+.clickable-label { cursor: pointer; }
+#pending-list label:hover { background-color: #f1f3f4; border-radius: 4px; }
+.action-buttons { margin-top: 15px; }
+#selected-standard { margin: 15px 0; font-weight: bold; }

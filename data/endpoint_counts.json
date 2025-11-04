@@ -1,0 +1,9 @@
+{
+    "/standards": 2,
+    "/pending/autosar": 4,
+    "endpoint": 4,
+    "/components": 1,
+    "/formats": 1,
+    "/fields/abs": 1,
+    "/generate-variable-name/abs/autosar": 1
+}
