@@ -197,7 +197,7 @@
 
                 if (res.ok) {
                     resultDiv.classList.add('alert-success');
-                    resultDiv.textContent = `Generated Variable Name: ${data.variable_name}`;
+                    resultDiv.innerHTML = `<strong> Generated Variable Name:  </strong> <span style="font-size: 26px; font-weight: bold; color:#4B0082;">${data.variable_name}</span>`;
 
                     // Display AUTOSAR matches (if any)
                     if (data.autosar_matches && data.autosar_matches.length > 0) {
@@ -212,7 +212,7 @@
                             `;
                         });
                         matchList += '</ul>';
-                        resultDiv.innerHTML += `<div class="mt-3"><strong>Approved AUTOSAR Matches:</strong>${matchList}</div>`;
+                        resultDiv.innerHTML += `<div class="mt-3"><strong> AUTOSAR Matches:</strong>${matchList}</div>`;
                     } else {
                         resultDiv.innerHTML += `<div class="mt-3 text-muted">No AUTOSAR matches found.</div>`;
                     }

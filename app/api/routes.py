@@ -172,7 +172,7 @@ def get_components():
 def validate_name(component: str, body: NameInput):
     naming_service = NamingService()
     endpoint = f"/validate/{component}" 
-    naming_service.update_endpoint_count("endpoint")
+    naming_service.update_endpoint_count(endpoint)
     name = body.name
     try:
         validator = MaabValidator(component)
@@ -180,3 +180,45 @@ def validate_name(component: str, body: NameInput):
         raise HTTPException(status_code=404, detail=f"No rules found for component '{component}'")
     results = validator.validate(name)
     return {"component": component, "name": name, "results": results}
+
+
+@router.get("/stats")
+def get_pending_variables():
+    naming_service = NamingService()
+    endpoint = f"/stats" 
+    naming_service.update_endpoint_count(endpoint)
+    stats_path = os.path.join(os.getcwd(), f"data/endpoint_counts.json")
+    return load_json(stats_path)
+
+
+
+
+
+@router.post("/generate-variable-name/abs/autosar/test")
+async def gen_var_name_excel(request: Request):
+    naming_service = NamingService()
+    endpoint = f"/generate-variable-name/excel" 
+    naming_service.update_endpoint_count(endpoint)
+    try:
+        user_data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid input format. Must be JSON.")
+
+    service = NamingService(format='abs', standard='autosar')
+    try:
+        result = service.gen_var_name(**user_data)
+    except KeyError as e:
+        raise HTTPException(status_code=422, detail=f"Missing required field: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating name: {e}")
+
+    variable_name = result.get("variable_name") if isinstance(result, dict) else result
+    autosar_matches = result.get("autosar_matches", []) if isinstance(result, dict) else []
+
+    # Save to pending.json (preserve prior behaviour)
+    pending_path = os.path.join(os.getcwd(), f"data/standards/autosar/pending.json")
+    pending = load_json(pending_path)
+    pending[variable_name] = user_data.get("description", "")
+    save_json(pending_path, pending)
+
+    return {"variable_name": variable_name}

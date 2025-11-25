@@ -1,9 +1,13 @@
 {
-    "/standards": 2,
-    "/pending/autosar": 4,
-    "endpoint": 4,
-    "/components": 1,
-    "/formats": 1,
-    "/fields/abs": 1,
-    "/generate-variable-name/abs/autosar": 1
+    "/formats": 68,
+    "/standards": 78,
+    "/fields/abs": 59,
+    "/generate-variable-name/abs/autosar": 155,
+    "/components": 15,
+    "/stats": 15,
+    "/pending/autosar": 8,
+    "/admin/actions/autosar": 2,
+    "/generate-variable-name/excel": 20,
+    "/validate/folder_name": 1,
+    "/validate/block_name": 1
 }
