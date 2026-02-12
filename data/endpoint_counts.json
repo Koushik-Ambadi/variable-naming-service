@@ -1,15 +1,16 @@
 {
-    "/formats": 122,
-    "/standards": 179,
-    "/fields/abs": 94,
-    "/generate-variable-name/abs/autosar": 321,
+    "/formats": 124,
+    "/standards": 183,
+    "/fields/abs": 95,
+    "/generate-variable-name/abs/autosar": 322,
     "/components": 27,
     "/stats": 27,
-    "/pending/autosar": 17,
-    "/admin/actions/autosar": 2,
+    "/pending/autosar": 22,
+    "/admin/actions/autosar": 5,
     "/generate-variable-name/excel": 26,
     "/validate/folder_name": 1,
     "/validate/block_name": 1,
     "/validate/file_name": 1,
-    "/validate/subsystem_name": 15
+    "/validate/subsystem_name": 15,
+    "/pending/internal": 1
 }

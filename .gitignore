@@ -11,3 +11,6 @@ __pycache__/
 *.db
 *.env
 *.log
+fastapi.log
+fastapi_error.log
+

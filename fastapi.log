@@ -3940,3 +3940,25 @@ INFO:     192.168.9.253:59462 - "GET /favicon.ico HTTP/1.1" 404 Not Found
 INFO:     192.168.9.253:59461 - "GET /standards HTTP/1.1" 200 OK
 INFO:     192.168.9.253:59461 - "GET /fields/abs HTTP/1.1" 200 OK
 INFO:     192.168.9.253:59464 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59515 - "GET /style.css HTTP/1.1" 404 Not Found
+INFO:     192.168.9.253:59515 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59515 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59560 - "GET /admin HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59560 - "GET /style.css HTTP/1.1" 404 Not Found
+INFO:     192.168.9.253:59560 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59560 - "GET /pending/internal HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59562 - "GET /pending/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59601 - "POST /admin/actions/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59601 - "GET /pending/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59613 - "POST /admin/actions/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59613 - "GET /pending/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59700 - "GET /style.css HTTP/1.1" 404 Not Found
+INFO:     192.168.9.253:59700 - "GET /formats HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59700 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59700 - "GET /fields/abs HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59702 - "POST /generate-variable-name/abs/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59704 - "GET /style.css HTTP/1.1" 404 Not Found
+INFO:     192.168.9.253:59704 - "GET /standards HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59704 - "GET /pending/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59707 - "POST /admin/actions/autosar HTTP/1.1" 200 OK
+INFO:     192.168.9.253:59707 - "GET /pending/autosar HTTP/1.1" 200 OK
