@@ -1,66 +1,89 @@
-/* --- consistent main card used across pages --- */
-.main-card {
-  max-width: 900px;
-  margin: 20px auto;
-  border-radius: 12px;
-  padding: 20px;
-}
-
-/* slightly larger body text and consistent background */
 body {
-  background-color: #f8f9fa;
-  font-size: 1rem;
-  padding-bottom: 40px;
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+    font-size: 1rem;
+    padding-bottom: 40px;
 }
 
-/* small helper text */
-.small.text-muted {
-  font-size: 0.9rem;
+.main-card {
+    max-width: 1000px;
+    margin: 20px auto;
+    border-radius: 12px;
+    padding: 20px;
+    background-color: #fff;
 }
 
-/* result alert styling */
+.option-card {
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #fdfdfd;
+    margin-bottom: 15px;
+}
+
+.option-card h5 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.option-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    min-height: 24px; /* Reserve space for labels */
+}
+
+.option-label span.option-text {
+    flex-grow: 1; /* Option text takes remaining space */
+}
+
+.option-label span.option-labels {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0; /* Prevent shifting */
+}
+
+
+.in-use {
+    color: #0d6efd;
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-left: 5px;
+}
+
+.conflict {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 0.85rem;
+    margin-left: 5px;
+}
+
+#warning-box {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    display: none;
+}
+
 #result {
-  word-break: break-word;
+    margin-top: 20px;
+    word-break: break-word;
 }
 
-/* fields container spacing already exists; ensure inputs stretch full width */
-#fields-container .mb-3 > .form-control,
-#fields-container .mb-3 > .form-select {
-  width: 100%;
+#action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
 }
 
-/* result cards already defined; ensure consistent spacing */
-.result-card {
-  background-color: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  margin-bottom: 0.75rem;
-}
-
-/* copy button small feedback */
-#copy-btn {
-  white-space: nowrap;
-}
-
-/* make action area clearer on mobile */
 @media (max-width: 576px) {
-  .main-card { padding: 16px; }
-  .row.g-3 { gap: .5rem; }
+    .option-card {
+        min-width: 100%;
+    }
 }
-
-/* preserve previously moved admin styles as well */
-.standard-btn { margin: 5px; }
-#pending-list li {
-  padding: 8px;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  margin-bottom: 5px;
-  background-color: white;
-}
-.clickable-label { cursor: pointer; }
-#pending-list label:hover { background-color: #f1f3f4; border-radius: 4px; }
-.action-buttons { margin-top: 15px; }
-#selected-standard { margin: 15px 0; font-weight: bold; }
-
- 
-

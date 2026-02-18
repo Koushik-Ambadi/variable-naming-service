@@ -1,7 +1,8 @@
 {
-    "Array/vector": "a",
-    "Element": "e",
-    "Matrix": "m",
-    "Structure or CAN message": "s",
-    "Table": "t"
+    "Array/vector <a>": "a",
+    "Element <e>": "e",
+    "Matrix <m>": "m",
+    "Structure or CAN message <s>": "s",
+    "Table <t>": "t"
 }
+

@@ -1,235 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Variable Name Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="static/style.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="style.css" rel="stylesheet" />
-    <style>
-        .server-dump {
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-
-        .card-body {
-            padding: 2rem;
-        }
-
-        .main-card {
-            border-radius: 1rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-success,
-        .btn-danger {
-            width: 100%;
-            font-size: 1.1rem;
-        }
-
-        .form-select,
-        .form-control {
-            font-size: 1.1rem;
-        }
-
-        .alert {
-            font-size: 1.1rem;
-            border-radius: 0.5rem;
-        }
-
-        .result-container {
-            padding: 1rem;
-        }
-    </style>
 </head>
-
-<body class="bg-light">
-
+<body>
     <div class="container mt-5">
         <div class="card shadow main-card">
             <div class="card-body">
                 <h2 class="mb-3 text-center">Generate Variable Name</h2>
-                <p class="small text-muted mb-4 text-center">
-                    Pick a format and standard, fill the fields and click <strong>Generate</strong>.
-                </p>
 
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-6">
-                        <label for="format" class="form-label">Format</label>
-                        <select id="format" class="form-select">
-                            <option value="">Select format</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="standard" class="form-label">Standard</label>
-                        <select id="standard" class="form-select">
-                            <option value="">Select standard</option>
-                        </select>
-                    </div>
+                <div id="fields-container" class="row g-3"></div>
+
+                <div id="abbreviations-container" class="row g-3 mt-3"></div>
+
+                <div id="action-buttons">
+                    <button id="fetch-options" class="btn btn-primary">Fetch Abbreviations</button>
+                    <button id="generate-btn" class="btn btn-success" disabled>Generate Variable Name</button>
                 </div>
 
-                <div id="fields-container" class="mt-3"></div>
-
-                <div class="mt-4">
-                    <button id="generate-btn" class="btn btn-success">Generate</button>
-                </div>
-
+                <div id="warning-box"></div>
                 <div class="alert mt-4 d-none" id="result" role="alert"></div>
-
             </div>
         </div>
     </div>
 
-    <script>
-        const BACKEND_URL = "http://192.168.10.71:8000";
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            const formatSelect = document.getElementById('format');
-            const standardSelect = document.getElementById('standard');
-
-            // Load formats
-            try {
-                const formatRes = await fetch(`${BACKEND_URL}/formats`);
-                const formats = await formatRes.json();
-                for (const key in formats) {
-                    const opt = document.createElement('option');
-                    opt.value = key;
-                    opt.textContent = key;
-                    formatSelect.appendChild(opt);
-                }
-            } catch (err) {
-                console.error("Error loading formats:", err);
-            }
-
-            // Load standards
-            try {
-                const standardRes = await fetch(`${BACKEND_URL}/standards`);
-                const standards = await standardRes.json();
-                standards.standards.forEach(std => {
-                    const opt = document.createElement('option');
-                    opt.value = std;
-                    opt.textContent = std;
-                    standardSelect.appendChild(opt);
-                });
-            } catch (err) {
-                console.error("Error loading standards:", err);
-            }
-        });
-
-        document.getElementById('format').addEventListener('change', async (e) => {
-            const format = e.target.value;
-            const fieldsContainer = document.getElementById('fields-container');
-            fieldsContainer.innerHTML = ''; // Reset the fields
-
-            if (!format) return;
-
-            try {
-                const res = await fetch(`${BACKEND_URL}/fields/${format}`);
-                const data = await res.json();
-                const fields = data.fields;
-
-                for (const fieldName in fields) {
-                    const div = document.createElement('div');
-                    div.classList.add('mb-3');
-
-                    const label = document.createElement('label');
-                    label.classList.add('form-label');
-                    label.setAttribute('for', `field-${fieldName}`);
-                    label.textContent = `Enter ${fieldName}:`;
-
-                    let input;
-                    if (fields[fieldName].type === 'select') {
-                        input = document.createElement('select');
-                        input.classList.add('form-select');
-                        fields[fieldName].options.forEach(opt => {
-                            const option = document.createElement('option');
-                            option.value = opt;
-                            option.textContent = opt;
-                            input.appendChild(option);
-                        });
-                    } else {
-                        input = document.createElement('input');
-                        input.type = 'text';
-                        input.classList.add('form-control');
-                    }
-
-                    input.id = `field-${fieldName}`;
-                    input.name = fieldName;
-                    div.appendChild(label);
-                    div.appendChild(input);
-                    fieldsContainer.appendChild(div);
-                }
-            } catch (err) {
-                console.error("Error loading fields:", err);
-            }
-        });
-
-        document.getElementById('generate-btn').addEventListener('click', async () => {
-            const resultDiv = document.getElementById('result');
-            resultDiv.classList.remove('d-none');
-            resultDiv.classList.remove('alert-danger', 'alert-success');
-            resultDiv.textContent = ''; // Reset the result
-
-            const format = document.getElementById('format').value;
-            const standard = document.getElementById('standard').value;
-
-            if (!format || !standard) {
-                resultDiv.classList.add('alert-danger');
-                resultDiv.textContent = "Please select format and standard.";
-                return;
-            }
-
-            const fields = {};
-            document.querySelectorAll('#fields-container input, #fields-container select').forEach(el => {
-                fields[el.name] = el.value;
-            });
-
-            try {
-                const res = await fetch(`${BACKEND_URL}/generate-variable-name/${format}/${standard}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(fields)
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    resultDiv.classList.add('alert-success');
-                    resultDiv.innerHTML = `<strong> Generated Variable Name:  </strong> <span style="font-size: 26px; font-weight: bold; color:#4B0082;">${data.variable_name}</span>`;
-
-                    // Display AUTOSAR matches (if any)
-                    if (data.autosar_matches && data.autosar_matches.length > 0) {
-                        let matchList = '<ul>';
-                        data.autosar_matches.forEach(match => {
-                            matchList += `
-                                <li>
-                                    <span class="fw-bold text-primary">${match.word}</span> 
-                                    <span class="text-muted">→</span> 
-                                    <span class="fw-bold text-success">${match.replacement}</span>
-                                </li>
-                            `;
-                        });
-                        matchList += '</ul>';
-                        resultDiv.innerHTML += `<div class="mt-3"><strong> AUTOSAR Matches:</strong>${matchList}</div>`;
-                    } else {
-                        resultDiv.innerHTML += `<div class="mt-3 text-muted">No AUTOSAR matches found.</div>`;
-                    }
-                } else {
-                    resultDiv.classList.add('alert-danger');
-                    resultDiv.textContent = data.detail || "Error generating name.";
-                }
-            } catch (err) {
-                resultDiv.classList.add('alert-danger');
-                resultDiv.textContent = "Network error while generating name.";
-                console.error("Error generating variable name:", err);
-            }
-        });
-    </script>
-
-
+    <script src="static/script.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

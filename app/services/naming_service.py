@@ -3,9 +3,8 @@ import json
 import re
 import os
 
-class NamingService:
 
-# Variable Naming Logic:
+class NamingService:
 
     STOPWORDS = [
         "a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
@@ -30,210 +29,269 @@ class NamingService:
     def __init__(self, format: str = "abs", standard: str = "autosar"):
         self.format = format
         self.standard = standard
-        self.base_path = os.path.join(os.getcwd(), f"data/naming_conventions/{self.format}")
-        self.config = self._load_json("format.json")
+        self.root_path = os.getcwd()
 
-        self.fields = self.config["fields"]
-        self.template = self.config["template"]
-        self.mappings = self._load_all_mappings()
+        self.base_path = os.path.join(self.root_path, f"data/naming_conventions/{self.format}")
+        self.standard_path = os.path.join(self.root_path, f"data/standards/{self.standard}")
 
-        # Define data path for storing the endpoint counts
-        self.data_path = os.path.join(os.getcwd(), "data")  # This is where 'endpoint_counts.json' will be stored
-        self.endpoint_counts_path = os.path.join(self.data_path, "endpoint_counts.json")
+        self.config = self._safe_load(os.path.join(self.base_path, "format.json"))
+        self.fields = self.config.get("fields", [])
+        self.template = self.config.get("template", "{description}")
 
-    def _load_json(self, relative_path: str):
-        full_path = os.path.join(self.base_path, relative_path)
-        with open(full_path, "r") as f:
-            return json.load(f)
+        self.endpoint_counts_path = os.path.join(self.root_path, "data/endpoint_counts.json")
 
-    def _load_all_mappings(self):
-        mappings = {}
-        for field in self.fields:
-            file_path = os.path.join(self.base_path, f"{field}s.json")
-            if os.path.exists(file_path):
-                mappings[field] = self._load_json(f"{field}s.json")
-        return mappings
 
-    def _load_abbreviation(self, standard: str):
-        abbr_path = os.path.join(os.getcwd(), f"data/standards/{standard}/abbreviation.json")
-        if os.path.exists(abbr_path):
-            with open(abbr_path, "r") as f:
-                return {k.lower(): v for k, v in json.load(f).items()}
+
+    # ---------------------------
+    # Utility Helpers
+    # ---------------------------
+
+    def _safe_load(self, path):
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                return {}
         return {}
 
-    def _add_new_abbreviations(self, standard: str, new_abbrs: dict):
-        pending_path = os.path.join(os.getcwd(), f"data/standards/{standard}/pending.json")
+    def _safe_save(self, path, data):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
 
-        if os.path.exists(pending_path):
-            with open(pending_path, "r") as f:
-                try:
-                    pending = json.load(f)
-                except json.JSONDecodeError:
-                    pending = {}
-        else:
-            pending = {}
 
-        updated = False
+
+    # ---------------------------
+    # Public API Methods
+    # ---------------------------
+
+    def generate(self, body: dict):
+        result = self.gen_var_name(**body)
+        self.update_endpoint_count(f"/generate-variable-name")
+        return result
+
+    def get_formats(self):
+        base_path = os.path.join(self.root_path, "data/naming_conventions")
+        formats = {}
+        if not os.path.exists(base_path):
+            return formats
+
+        for fmt in os.listdir(base_path):
+            format_file = os.path.join(base_path, fmt, "format.json")
+            config = self._safe_load(format_file)
+            formats[fmt] = config.get("fields", [])
+
+        return formats
+
+    def get_standards(self):
+        base_path = os.path.join(self.root_path, "data/standards")
+        if not os.path.exists(base_path):
+            return {"standards": []}
+        return {"standards": os.listdir(base_path)}
+
+    def get_format_fields(self):
+        response = {}
+        for field in self.fields:
+            options_file = os.path.join(self.base_path, f"{field}s.json")
+            options_data = self._safe_load(options_file)
+            if options_data:
+                response[field] = {"type": "select", "options": list(options_data.keys())}
+            else:
+                response[field] = {"type": "string", "description": f"Enter {field}"}
+        return {"format": self.format, "fields": response}
+
+    def get_pending(self):
+        return self._safe_load(os.path.join(self.standard_path, "pending.json"))
+
+    def admin_action(self, body: dict):
+        variables = body.get("variables", [])
+        action = body.get("action", "")
+
+        if action == "approve":
+            approved = self._approve_pending_abbreviations(variables)
+            return {"status": "approved", "approved": approved}
+
+        if action == "delete":
+            self._delete_pending_abbreviations(variables)
+            return {"status": "deleted", "deleted": variables}
+
+        return {"status": "error", "message": "Invalid action"}
+
+    def get_stats(self):
+        return self._safe_load(self.endpoint_counts_path)
+
+    def get_components(self):
+        return self._safe_load(os.path.join(self.root_path, "data/maab/components.json"))
+
+    # ---------------------------
+    # Core Naming Logic
+    # ---------------------------
+
+    def _load_abbreviation(self):
+        path = os.path.join(self.standard_path, "abbreviation.json")
+        data = self._safe_load(path)
+        return {k.lower(): v for k, v in data.items()}
+
+    def _add_new_abbreviations(self, new_abbrs: dict):
+        pending_path = os.path.join(self.standard_path, "pending.json")
+        pending = self._safe_load(pending_path)
+
         for word, abbr in new_abbrs.items():
             if word not in pending:
                 pending[word] = abbr
-                updated = True
 
-        if updated:
-            with open(pending_path, "w") as f:
-                json.dump(pending, f, indent=4)
+        self._safe_save(pending_path, pending)
 
-    def gen_var_name(self, standard: str = None, **kwargs):
-        standard = standard or self.standard
-        abbreviations = self._load_abbreviation(standard)
 
-        values = {}
-        autosar_matches = []
-        new_abbreviations = {}
+    # ---------------------------
+    # Admin Internal
+    # ---------------------------
 
-        for field in self.fields:
-            user_input = kwargs.get(field, "")
+    def _approve_pending_abbreviations(self, to_approve: list):
+        pending_path = os.path.join(self.standard_path, "pending.json")
+        approved_path = os.path.join(self.standard_path, "abbreviation.json")
 
-            if field == "description":
-                tokens = user_input.split()
-                final_tokens = []
-
-                for token in tokens:
-                    token_lower = token.lower()
-                    if token_lower in abbreviations:
-                        abbr = abbreviations[token_lower]
-                        autosar_matches.append({
-                            "word": token,
-                            "replacement": abbr,
-                        })
-                    elif token_lower in self.STOPWORDS:
-                        abbr = ""
-                    else:
-                        first = token_lower[0]
-                        rest = re.sub(r'[aeiou]', '', token_lower[1:])
-                        rest = re.sub(r'(.)\1+', r'\1', rest)
-                        abbr = (first + rest)[:4].capitalize()
-                        new_abbreviations[token_lower] = abbr
-
-                    final_tokens.append(abbr)
-
-                final_variable = "".join([t for t in final_tokens if t])
-                if new_abbreviations:
-                    self._add_new_abbreviations(standard, new_abbreviations)
-                values[field] = final_variable
-            else:
-                mapping = self.mappings.get(field, {})
-                values[field] = mapping.get(user_input, user_input)
-
-        variable_name = self.template.format(**values)
-        return {
-            "variable_name": variable_name,
-            "autosar_matches": autosar_matches
-        }
-
-# Admin Logic:
-
-    def _approve_pending_abbreviations(self, standard: str, to_approve: list):
-        """
-        Move entries from pending.json to abbreviation.json (approved),
-        then delete those entries from pending.json
-        """
-        pending_path = os.path.join(os.getcwd(), f"data/standards/{standard}/pending.json")
-        approved_path = os.path.join(os.getcwd(), f"data/standards/{standard}/abbreviation.json")
-
-        # Load pending
-        if os.path.exists(pending_path):
-            with open(pending_path, "r") as f:
-                try:
-                    pending = json.load(f)
-                except json.JSONDecodeError:
-                    pending = {}
-        else:
-            pending = {}
-
-        # Load approved
-        if os.path.exists(approved_path):
-            with open(approved_path, "r") as f:
-                try:
-                    approved = json.load(f)
-                except json.JSONDecodeError:
-                    approved = {}
-        else:
-            approved = {}
+        pending = self._safe_load(pending_path)
+        approved = self._safe_load(approved_path)
 
         approved_items = {}
-        updated = False
 
         for word in to_approve:
             if word in pending:
                 approved[word] = pending[word]
                 approved_items[word] = pending[word]
                 del pending[word]
-                updated = True
 
-        if updated:
-            # Save updated approved
-            with open(approved_path, "w") as f:
-                json.dump(approved, f, indent=4)
-
-            # Save updated pending
-            with open(pending_path, "w") as f:
-                json.dump(pending, f, indent=4)
+        self._safe_save(approved_path, approved)
+        self._safe_save(pending_path, pending)
 
         return approved_items
 
+    def _delete_pending_abbreviations(self, to_delete: list):
+        pending_path = os.path.join(self.standard_path, "pending.json")
+        pending = self._safe_load(pending_path)
 
-    def _delete_pending_abbreviations(self, standard: str, to_delete: list):
-        """Delete multiple entries from pending.json"""
-        pending_path = os.path.join(os.getcwd(), f"data/standards/{standard}/pending.json")
-
-        if os.path.exists(pending_path):
-            with open(pending_path, "r") as f:
-                try:
-                    pending = json.load(f)
-                except json.JSONDecodeError:
-                    pending = {}
-        else:
-            pending = {}
-
-        updated = False
         for word in to_delete:
-            if word in pending:
-                del pending[word]
-                updated = True
+            pending.pop(word, None)
 
-        if updated:
-            with open(pending_path, "w") as f:
-                json.dump(pending, f, indent=4)
+        self._safe_save(pending_path, pending)
 
+    # ---------------------------
+    # Endpoint Stats
+    # ---------------------------
 
-
-# EndpointUsageTracker:
     def update_endpoint_count(self, endpoint: str):
-        """This function updates the count of hits for a given endpoint."""
-        
-        if not os.path.exists(self.data_path):
-            os.makedirs(self.data_path)
-        
-        # Load the existing endpoint counts
-        if os.path.exists(self.endpoint_counts_path):
-            try:
-                with open(self.endpoint_counts_path, "r", encoding="utf-8") as f:
-                    endpoint_counts = json.load(f)
-            except json.JSONDecodeError:
-                endpoint_counts = {}
-        else:
-            endpoint_counts = {}
+        stats = self._safe_load(self.endpoint_counts_path)
+        stats[endpoint] = stats.get(endpoint, 0) + 1
+        self._safe_save(self.endpoint_counts_path, stats)
 
-        # Increment the count for the given endpoint
-        if endpoint in endpoint_counts:
-            endpoint_counts[endpoint] += 1
-        else:
-            endpoint_counts[endpoint] = 1
 
-        # Save the updated counts back to the file
-        try:
-            with open(self.endpoint_counts_path, "w", encoding="utf-8") as f:
-                json.dump(endpoint_counts, f, indent=4)
-        except Exception as e:
-            print(f"Error saving endpoint counts: {e}")
+
+
+    # ---------------------------
+    # New Method: Get options for each word (stopwords removed)
+    # ---------------------------
+    def get_options_for_description(self, description: str):
+        if not description:
+            return {"words_options": {}}
+
+        abbreviations = self._load_abbreviation()
+        tokens = description.split()
+        words_options = {}
+        new_abbreviations = {}
+
+        for token in tokens:
+            token_lower = token.lower()
+            if token_lower in self.STOPWORDS:
+                continue
+
+            options = []
+
+            # Option 1: JSON dictionary
+            if token_lower in abbreviations:
+                options.append({
+                    "value": abbreviations[token_lower],
+                    "in_use": True,
+                    "conflict": False
+                })
+
+            # Option 2: regex-based rule
+            first = token_lower[0]
+            rest = re.sub(r'[aeiou]', '', token_lower[1:])
+            rest = re.sub(r'(.)\1+', r'\1', rest)
+            abbr2 = (first + rest)[:6].capitalize()
+            conflict2 = abbr2 in new_abbreviations.values() or abbr2 in abbreviations.values()
+            options.append({
+                "value": abbr2,
+                "in_use": False,
+                "conflict": conflict2
+            })
+
+            # Option 3: extended rule
+            first_part = token_lower[:4]
+            rest_part = re.sub(r'[aeiou]', '', token_lower[4:]) if len(token_lower) > 4 else ''
+            abbr3 = (first_part + rest_part)[:8].capitalize()
+            conflict3 = abbr3 in new_abbreviations.values() or abbr3 in abbreviations.values()
+            options.append({
+                "value": abbr3,
+                "in_use": False,
+                "conflict": conflict3
+            })
+
+            words_options[token] = options
+            new_abbreviations[token_lower] = abbr2
+
+        return {"words_options": words_options}
+
+
+
+    def gen_var_name(self, **kwargs):
+        values = {}
+        warnings_list = []
+
+        for field in self.fields:
+
+            if field == "description":
+                description_tokens = kwargs.get("description", {})
+
+                # Keep order as received
+                final_tokens = list(description_tokens.values())
+
+                if final_tokens:
+                    final_tokens[0] = final_tokens[0].lower()
+
+                stitched_description = "".join(final_tokens)
+                values["description"] = stitched_description
+
+                # 🔴 Description length validation (14–22)
+                desc_length = len(stitched_description)
+                if not (14 <= desc_length <= 22):
+                    warnings_list.append(
+                        f"Description length should be between 14 and 22 characters. "
+                        f"Current length: {desc_length}"
+                    )
+
+            else:
+                user_input = kwargs.get(field, "")
+
+                mapping_file = os.path.join(self.base_path, f"{field}s.json")
+                mapping = self._safe_load(mapping_file)
+
+                values[field] = mapping.get(user_input, user_input)
+
+        # Build final variable name
+        variable_name = self.template.format(**values)
+
+        # 🔴 Final variable name must be 31 characters
+        var_length = len(variable_name)
+        if var_length > 31:
+            warnings_list.append(
+                f"Final variable name must be less than 31 characters. "
+                f"Current length: {var_length}"
+            )
+
+        return {
+            "variable_name": variable_name,
+            "warnings": warnings_list
+        }
