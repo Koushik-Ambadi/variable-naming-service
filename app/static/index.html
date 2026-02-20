@@ -17,7 +17,16 @@
 
                 <div id="abbreviations-container" class="row g-3 mt-3"></div>
 
-                <div id="action-buttons">
+                <!-- ✅ NEW LENGTH STATUS UI -->
+                <div id="length-status" class="length-box d-none">
+                    <div>
+                        Total Description Length: 
+                        <span id="total-length">0</span>
+                    </div>
+                    <div id="length-message" class="length-message"></div>
+                </div>
+
+                <div id="action-buttons" class="mt-3">
                     <button id="fetch-options" class="btn btn-primary">Fetch Abbreviations</button>
                     <button id="generate-btn" class="btn btn-success" disabled>Generate Variable Name</button>
                 </div>

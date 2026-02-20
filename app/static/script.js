@@ -7,6 +7,15 @@ const generateBtn = document.getElementById('generate-btn');
 const resultDiv = document.getElementById('result');
 const warningBox = document.getElementById('warning-box');
 
+// ---------------------------
+// Cumulative length feature
+// ---------------------------
+const MIN_LENGTH = 14;
+const MAX_LENGTH = 22;
+const lengthStatusBox = document.getElementById('length-status');
+const totalLengthSpan = document.getElementById('total-length');
+const lengthMessage = document.getElementById('length-message');
+
 let selectedOptions = {};   // { word: abbreviation }
 let wordsOptionsData = {};
 let descriptionValue = "";
@@ -67,7 +76,6 @@ fetchBtn.addEventListener('click', async () => {
     const description = descriptionInput.value.trim();
     if (!description) return alert("Please enter a description.");
 
-    // Avoid refetch if description unchanged
     if (description === descriptionValue && Object.keys(wordsOptionsData).length) return;
     descriptionValue = description;
 
@@ -86,6 +94,7 @@ fetchBtn.addEventListener('click', async () => {
         warningBox.style.display = 'none';
         resultDiv.classList.add('d-none');
         generateBtn.disabled = true;
+        if(lengthStatusBox) lengthStatusBox.classList.add('d-none');
 
     } catch (err) {
         console.error(err);
@@ -123,10 +132,9 @@ function renderAbbreviationCards(wordsOptions) {
             if (opt.conflict) radio.dataset.conflict = "true";
 
             radio.addEventListener('change', () => {
-                // Save selection as plain key-value pair
                 selectedOptions[word] = opt.value;
                 checkConflicts();
-                updateGenerateButtonState();
+                updateTotalLength();   // ✅ New: cumulative length
             });
 
             const optionText = document.createElement('span');
@@ -182,6 +190,35 @@ function checkConflicts() {
 }
 
 // ---------------------------
+// Update cumulative length
+// ---------------------------
+function updateTotalLength() {
+    let totalLength = 0;
+
+    Object.values(selectedOptions).forEach(val => {
+        if (val) totalLength += val.length;
+    });
+
+    if(lengthStatusBox){
+        lengthStatusBox.classList.remove('d-none');
+        totalLengthSpan.textContent = totalLength;
+
+        if (totalLength < MIN_LENGTH) {
+            lengthStatusBox.className = "length-box invalid";
+            lengthMessage.textContent = `Minimum ${MIN_LENGTH} required (${MIN_LENGTH - totalLength} more needed)`;
+        } else if (totalLength > MAX_LENGTH) {
+            lengthStatusBox.className = "length-box invalid";
+            lengthMessage.textContent = `Maximum ${MAX_LENGTH} allowed (reduce ${totalLength - MAX_LENGTH})`;
+        } else {
+            lengthStatusBox.className = "length-box valid";
+            lengthMessage.textContent = "Length within allowed range ✔";
+        }
+    }
+
+    updateGenerateButtonState();
+}
+
+// ---------------------------
 // Enable/disable generate button
 // ---------------------------
 function updateGenerateButtonState() {
@@ -196,13 +233,17 @@ function updateGenerateButtonState() {
         });
     }
 
-    generateBtn.disabled = selectedCount !== totalWords || conflictExists || totalWords === 0;
+    // ✅ Disable generate button if not all selected OR conflict OR length out of bounds
+    let totalLength = 0;
+    Object.values(selectedOptions).forEach(val => { if(val) totalLength += val.length; });
+    const lengthInvalid = totalLength < MIN_LENGTH || totalLength > MAX_LENGTH;
+
+    generateBtn.disabled = selectedCount !== totalWords || conflictExists || totalWords === 0 || lengthInvalid;
 }
 
 // ---------------------------
 // Generate variable name
 // ---------------------------
-
 generateBtn.addEventListener('click', async () => {
     if (Object.keys(selectedOptions).length === 0) {
         alert("Please select abbreviation for each word.");
@@ -234,7 +275,7 @@ generateBtn.addEventListener('click', async () => {
 
         const data = await res.json();
 
-        // ✅ Show generated name
+        // Show generated name
         resultDiv.classList.remove('d-none', 'alert-danger');
         resultDiv.classList.add('alert-success');
         resultDiv.innerHTML = `
@@ -244,7 +285,7 @@ generateBtn.addEventListener('click', async () => {
             </span>
         `;
 
-        // ✅ Show warnings if any
+        // Show warnings if any
         if (data.warnings && data.warnings.length > 0) {
             warningBox.innerHTML = data.warnings
                 .map(w => `<div class="alert alert-warning mt-2">${w}</div>`)
@@ -262,9 +303,6 @@ generateBtn.addEventListener('click', async () => {
         resultDiv.textContent = "Error generating variable name.";
     }
 });
-
-
-
 
 // ---------------------------
 // Reset fetch button when description changes

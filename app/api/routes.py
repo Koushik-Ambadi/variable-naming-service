@@ -10,18 +10,19 @@ router = APIRouter()
 class NameInput(BaseModel):
     name: str
 
+'''
+
+depricated endpoints - added in case if we have more formats and standards
 
 @router.get("/formats")
 def get_formats():
-    # Deprecated, we no longer use formats
     return {"formats": ["abs"]}
-
 
 @router.get("/standards")
 def get_standards():
-    # Deprecated, we no longer use standards
     return {"standards": []}
 
+'''
 
 @router.get("/fields")
 def get_format_fields():
@@ -32,7 +33,7 @@ def get_format_fields():
 @router.post("/generate-variable-name")
 async def gen_var_name(body: dict = Body(...)):
     """
-    Existing endpoint for generating variable names
+    format and standard will be determined by default values in the service for now, as we are only supporting one format and standard. In future, we can add these as parameters in the request body and handle them accordingly in the service. For now, we will ignore these parameters
     without format and standard.
     """
     service = NamingService()
@@ -72,9 +73,15 @@ async def admin_actions(body: dict = Body(...)):
     return NamingService().admin_action(body)
 
 
+    # ---------------------------
+    # MAAB Validation Endpoint
+    # ---------------------------
+
+
+
 @router.get("/components")
 def get_components():
-    return NamingService().get_components()
+    return MaabValidator.get_components()
 
 
 @router.post("/validate/{component}")
@@ -86,6 +93,13 @@ def validate_name(component: str, body: NameInput):
 
     results = validator.validate(body.name)
     return {"component": component, "name": body.name, "results": results}
+
+
+
+    # ---------------------------
+    # stats endpoint
+    # ---------------------------
+
 
 
 @router.get("/stats")

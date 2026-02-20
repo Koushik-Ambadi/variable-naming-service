@@ -71,24 +71,6 @@ class NamingService:
         self.update_endpoint_count(f"/generate-variable-name")
         return result
 
-    def get_formats(self):
-        base_path = os.path.join(self.root_path, "data/naming_conventions")
-        formats = {}
-        if not os.path.exists(base_path):
-            return formats
-
-        for fmt in os.listdir(base_path):
-            format_file = os.path.join(base_path, fmt, "format.json")
-            config = self._safe_load(format_file)
-            formats[fmt] = config.get("fields", [])
-
-        return formats
-
-    def get_standards(self):
-        base_path = os.path.join(self.root_path, "data/standards")
-        if not os.path.exists(base_path):
-            return {"standards": []}
-        return {"standards": os.listdir(base_path)}
 
     def get_format_fields(self):
         response = {}
@@ -120,9 +102,6 @@ class NamingService:
 
     def get_stats(self):
         return self._safe_load(self.endpoint_counts_path)
-
-    def get_components(self):
-        return self._safe_load(os.path.join(self.root_path, "data/maab/components.json"))
 
     # ---------------------------
     # Core Naming Logic
@@ -187,11 +166,10 @@ class NamingService:
         self._safe_save(self.endpoint_counts_path, stats)
 
 
-
-
     # ---------------------------
     # New Method: Get options for each word (stopwords removed)
     # ---------------------------
+    
     def get_options_for_description(self, description: str):
         if not description:
             return {"words_options": {}}
@@ -208,7 +186,14 @@ class NamingService:
 
             options = []
 
-            # Option 1: JSON dictionary
+            # Option 1: Complete word itself
+            options.append({
+                "value": token.capitalize(),  # keeping capitalization
+                "in_use": True,               # can mark as in use
+                "conflict": False
+            })
+
+            # Option 2: JSON dictionary abbreviation (existing)
             if token_lower in abbreviations:
                 options.append({
                     "value": abbreviations[token_lower],
@@ -216,7 +201,7 @@ class NamingService:
                     "conflict": False
                 })
 
-            # Option 2: regex-based rule
+            # Option 3: regex-based rule
             first = token_lower[0]
             rest = re.sub(r'[aeiou]', '', token_lower[1:])
             rest = re.sub(r'(.)\1+', r'\1', rest)
@@ -228,7 +213,7 @@ class NamingService:
                 "conflict": conflict2
             })
 
-            # Option 3: extended rule
+            # Option 4: extended rule
             first_part = token_lower[:4]
             rest_part = re.sub(r'[aeiou]', '', token_lower[4:]) if len(token_lower) > 4 else ''
             abbr3 = (first_part + rest_part)[:8].capitalize()
@@ -243,7 +228,6 @@ class NamingService:
             new_abbreviations[token_lower] = abbr2
 
         return {"words_options": words_options}
-
 
 
     def gen_var_name(self, **kwargs):
