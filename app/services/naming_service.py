@@ -2,9 +2,16 @@
 import json
 import re
 import os
+import sqlite3
 
+from app.services.database_service import DatabaseService
+from app.core.database import get_connection, init_db
+
+# Initialize DB and tables (in case they don't exist)
+init_db()
 
 class NamingService:
+
 
     STOPWORDS = [
         "a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
@@ -62,10 +69,6 @@ class NamingService:
 
 
 
-    # ---------------------------
-    # Public API Methods
-    # ---------------------------
-
     def generate(self, body: dict):
         result = self.gen_var_name(**body)
         self.update_endpoint_count(f"/generate-variable-name")
@@ -83,22 +86,6 @@ class NamingService:
                 response[field] = {"type": "string", "description": f"Enter {field}"}
         return {"format": self.format, "fields": response}
 
-    def get_pending(self):
-        return self._safe_load(os.path.join(self.standard_path, "pending.json"))
-
-    def admin_action(self, body: dict):
-        variables = body.get("variables", [])
-        action = body.get("action", "")
-
-        if action == "approve":
-            approved = self._approve_pending_abbreviations(variables)
-            return {"status": "approved", "approved": approved}
-
-        if action == "delete":
-            self._delete_pending_abbreviations(variables)
-            return {"status": "deleted", "deleted": variables}
-
-        return {"status": "error", "message": "Invalid action"}
 
     def get_stats(self):
         return self._safe_load(self.endpoint_counts_path)
@@ -112,49 +99,7 @@ class NamingService:
         data = self._safe_load(path)
         return {k.lower(): v for k, v in data.items()}
 
-    def _add_new_abbreviations(self, new_abbrs: dict):
-        pending_path = os.path.join(self.standard_path, "pending.json")
-        pending = self._safe_load(pending_path)
 
-        for word, abbr in new_abbrs.items():
-            if word not in pending:
-                pending[word] = abbr
-
-        self._safe_save(pending_path, pending)
-
-
-    # ---------------------------
-    # Admin Internal
-    # ---------------------------
-
-    def _approve_pending_abbreviations(self, to_approve: list):
-        pending_path = os.path.join(self.standard_path, "pending.json")
-        approved_path = os.path.join(self.standard_path, "abbreviation.json")
-
-        pending = self._safe_load(pending_path)
-        approved = self._safe_load(approved_path)
-
-        approved_items = {}
-
-        for word in to_approve:
-            if word in pending:
-                approved[word] = pending[word]
-                approved_items[word] = pending[word]
-                del pending[word]
-
-        self._safe_save(approved_path, approved)
-        self._safe_save(pending_path, pending)
-
-        return approved_items
-
-    def _delete_pending_abbreviations(self, to_delete: list):
-        pending_path = os.path.join(self.standard_path, "pending.json")
-        pending = self._safe_load(pending_path)
-
-        for word in to_delete:
-            pending.pop(word, None)
-
-        self._safe_save(pending_path, pending)
 
     # ---------------------------
     # Endpoint Stats
@@ -189,7 +134,7 @@ class NamingService:
             # Option 1: Complete word itself
             options.append({
                 "value": token.capitalize(),  # keeping capitalization
-                "in_use": True,               # can mark as in use
+                "in_use": False,               # can mark as in use
                 "conflict": False
             })
 
@@ -197,7 +142,7 @@ class NamingService:
             if token_lower in abbreviations:
                 options.append({
                     "value": abbreviations[token_lower],
-                    "in_use": True,
+                    "in_use": False,
                     "conflict": False
                 })
 
@@ -210,7 +155,7 @@ class NamingService:
             options.append({
                 "value": abbr2,
                 "in_use": False,
-                "conflict": conflict2
+                "conflict": False #All False for now, we can implement logic to mark in_use and conflict based on actual usage in the system
             })
 
             # Option 4: extended rule
@@ -221,7 +166,7 @@ class NamingService:
             options.append({
                 "value": abbr3,
                 "in_use": False,
-                "conflict": conflict3
+                "conflict": False #All False for now, we can implement logic to mark in_use and conflict based on actual usage in the system
             })
 
             words_options[token] = options
@@ -241,41 +186,61 @@ class NamingService:
 
                 # Keep order as received
                 final_tokens = list(description_tokens.values())
-
                 if final_tokens:
                     final_tokens[0] = final_tokens[0].lower()
 
                 stitched_description = "".join(final_tokens)
                 values["description"] = stitched_description
 
-                # 🔴 Description length validation (14–22)
-                desc_length = len(stitched_description)
-                if not (14 <= desc_length <= 22):
-                    warnings_list.append(
-                        f"Description length should be between 14 and 22 characters. "
-                        f"Current length: {desc_length}"
-                    )
-
             else:
                 user_input = kwargs.get(field, "")
-
                 mapping_file = os.path.join(self.base_path, f"{field}s.json")
                 mapping = self._safe_load(mapping_file)
-
                 values[field] = mapping.get(user_input, user_input)
 
         # Build final variable name
         variable_name = self.template.format(**values)
 
-        # 🔴 Final variable name must be 31 characters
-        var_length = len(variable_name)
-        if var_length > 31:
+        # Always check length
+        if len(variable_name) > 31:
             warnings_list.append(
-                f"Final variable name must be less than 31 characters. "
-                f"Current length: {var_length}"
+                f"Final variable name must be less than 31 characters. Current length: {len(variable_name)}"
             )
+
+        # ---------------------------
+        # Insert into Database
+        # ---------------------------
+        variable_id = None
+        try:
+            variable_id = DatabaseService.insert_variable_name(
+                variable_name=variable_name,
+                module=values.get("module"),
+                data_type=values.get("data_type"),
+                data_size=values.get("data_size"),
+                unit=values.get("unit"),
+                description_user=kwargs.get("description_user"),
+                description_json=None
+            )
+        except sqlite3.IntegrityError as e:
+            # Duplicate variable name
+            if "UNIQUE constraint failed" in str(e):
+                warnings_list.append(f'"{variable_name}" already exists')
+                variable_id = None
+            else:
+                raise  # re-raise any other DB integrity errors
+
+        # Insert abbreviations snapshot only if variable_id is valid
+        if variable_id:
+            description_tokens = kwargs.get("description", {})
+            for word, abbr in description_tokens.items():
+                DatabaseService.insert_abbreviation(word, abbr, variable_id)
 
         return {
             "variable_name": variable_name,
-            "warnings": warnings_list
+            "warnings": warnings_list,
+            "variable_id": variable_id
         }
+
+
+
+#end of NamingService class

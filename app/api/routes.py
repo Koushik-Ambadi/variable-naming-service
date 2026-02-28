@@ -22,11 +22,27 @@ def get_formats():
 def get_standards():
     return {"standards": []}
 
+    
+
+
+depricated endpoints - Moving to data base for better management and scalability. 
+
+@router.get("/pending")
+def get_pending():
+    return NamingService().get_pending()
+
+
+@router.post("/admin/actions")
+async def admin_actions(body: dict = Body(...)):
+    return NamingService().admin_action(body)
+
+
+
 '''
 
 @router.get("/fields")
 def get_format_fields():
-    # Only return fields from default service
+    # return the fields of abs format, in future we can add more formats and standards and return the fields accordingly based on the request parameters
     return NamingService().get_format_fields()
 
 
@@ -44,7 +60,6 @@ async def gen_var_name(body: dict = Body(...)):
 async def generate_options(body: dict = Body(...)):
     """
     Fetch abbreviation options for each word in the description
-    and also return metadata for other fields.
     """
     description = body.get("description", "").strip()
     if not description:
@@ -62,15 +77,6 @@ async def generate_options(body: dict = Body(...)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch options: {str(e)}")
 
 
-
-@router.get("/pending")
-def get_pending():
-    return NamingService().get_pending()
-
-
-@router.post("/admin/actions")
-async def admin_actions(body: dict = Body(...)):
-    return NamingService().admin_action(body)
 
 
     # ---------------------------

@@ -241,6 +241,8 @@ function updateGenerateButtonState() {
     generateBtn.disabled = selectedCount !== totalWords || conflictExists || totalWords === 0 || lengthInvalid;
 }
 
+
+
 // ---------------------------
 // Generate variable name
 // ---------------------------
@@ -252,13 +254,17 @@ generateBtn.addEventListener('click', async () => {
 
     const payload = {};
 
+    // Collect all fields including description
     document.querySelectorAll('#fields-container input, #fields-container select').forEach(el => {
-        if (el.id !== 'description') {
+        if (el.id === 'description') {
+            payload["description_user"] = el.value.trim();   // ✅ raw user description
+        } else {
             payload[el.id] = el.value;
         }
     });
 
-    payload["description"] = { ...selectedOptions };
+    // Send selected abbreviations separately
+    payload["description"] = { ...selectedOptions };  // ✅ abbreviation dict
 
     try {
         const res = await fetch(`${BACKEND_URL}/generate-variable-name`, {
@@ -303,7 +309,6 @@ generateBtn.addEventListener('click', async () => {
         resultDiv.textContent = "Error generating variable name.";
     }
 });
-
 // ---------------------------
 // Reset fetch button when description changes
 // ---------------------------

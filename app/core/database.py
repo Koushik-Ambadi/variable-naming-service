@@ -16,19 +16,19 @@ def get_connection():
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
-
 def init_db():
     """
     Creates database tables if they do not exist.
+    Adds UNIQUE constraints for variable_name and abbreviations.
     """
     conn = get_connection()
     cursor = conn.cursor()
 
-    # Create variable_names table
+    # Create variable_names table with UNIQUE constraint on variable_name
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS variable_names (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            variable_name TEXT,
+            variable_name TEXT UNIQUE,
             module TEXT,
             data_type TEXT,
             data_size TEXT,
@@ -39,7 +39,7 @@ def init_db():
         );
     """)
 
-    # Create abbreviations table
+    # Create abbreviations table with UNIQUE constraint on (word, variable_id)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS abbreviations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
