@@ -57,5 +57,19 @@ class DatabaseService:
         conn.commit()
         conn.close()
 
+    @staticmethod
+    def get_words_by_abbreviation(abbreviation: str):
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT word FROM abbreviations WHERE LOWER(abbreviation) = LOWER(?)",
+            (abbreviation,)
+        )
+
+        records = cursor.fetchall()
+        conn.close()
+
+        return [row[0] for row in records]
 
         

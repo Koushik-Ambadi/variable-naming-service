@@ -114,66 +114,78 @@ class NamingService:
     # ---------------------------
     # New Method: Get options for each word (stopwords removed)
     # ---------------------------
-    
+
     def get_options_for_description(self, description: str):
         if not description:
             return {"words_options": {}}
 
-        abbreviations = self._load_abbreviation()
+        abbreviations_json = self._load_abbreviation()
         tokens = description.split()
         words_options = {}
-        new_abbreviations = {}
 
         for token in tokens:
             token_lower = token.lower()
+
             if token_lower in self.STOPWORDS:
                 continue
 
+            generated = set()
             options = []
 
-            # Option 1: Complete word itself
-            options.append({
-                "value": token.capitalize(),  # keeping capitalization
-                "in_use": False,               # can mark as in use
-                "conflict": False
-            })
+            def add_option(value):
+                value_clean = value.capitalize()
 
-            # Option 2: JSON dictionary abbreviation (existing)
-            if token_lower in abbreviations:
+                if value_clean in generated:
+                    return
+
+                generated.add(value_clean)
+
+                # 🔹 Fetch only matching abbreviation entries
+                existing_words = DatabaseService.get_words_by_abbreviation(value_clean)
+
+                in_use = False
+                conflict = False
+
+                if existing_words:
+                    if token_lower in [w.lower() for w in existing_words]:
+                        in_use = True
+
+                    # If any other word uses same abbreviation
+                    if any(w.lower() != token_lower for w in existing_words):
+                        conflict = True
+
                 options.append({
-                    "value": abbreviations[token_lower],
-                    "in_use": False,
-                    "conflict": False
+                    "value": value_clean,
+                    "in_use": in_use,
+                    "conflict": conflict
                 })
 
-            # Option 3: regex-based rule
+            # Option 1: full word
+            add_option(token)
+
+            # Option 2: JSON abbreviation
+            if token_lower in abbreviations_json:
+                add_option(abbreviations_json[token_lower])
+
+            # Option 3: regex rule
             first = token_lower[0]
             rest = re.sub(r'[aeiou]', '', token_lower[1:])
             rest = re.sub(r'(.)\1+', r'\1', rest)
-            abbr2 = (first + rest)[:6].capitalize()
-            conflict2 = abbr2 in new_abbreviations.values() or abbr2 in abbreviations.values()
-            options.append({
-                "value": abbr2,
-                "in_use": False,
-                "conflict": False #All False for now, we can implement logic to mark in_use and conflict based on actual usage in the system
-            })
+            abbr2 = (first + rest)[:6]
+            add_option(abbr2)
 
             # Option 4: extended rule
             first_part = token_lower[:4]
             rest_part = re.sub(r'[aeiou]', '', token_lower[4:]) if len(token_lower) > 4 else ''
-            abbr3 = (first_part + rest_part)[:8].capitalize()
-            conflict3 = abbr3 in new_abbreviations.values() or abbr3 in abbreviations.values()
-            options.append({
-                "value": abbr3,
-                "in_use": False,
-                "conflict": False #All False for now, we can implement logic to mark in_use and conflict based on actual usage in the system
-            })
+            abbr3 = (first_part + rest_part)[:8]
+            add_option(abbr3)
 
             words_options[token] = options
-            new_abbreviations[token_lower] = abbr2
 
         return {"words_options": words_options}
 
+
+#variable name generation logic
 
     def gen_var_name(self, **kwargs):
         values = {}
