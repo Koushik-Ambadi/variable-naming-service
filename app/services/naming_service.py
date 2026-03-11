@@ -78,7 +78,7 @@ class NamingService:
     def get_format_fields(self):
         response = {}
         for field in self.fields:
-            options_file = os.path.join(self.base_path, f"{field}s.json")
+            options_file = os.path.join(self.base_path, f"{field}.json")
             options_data = self._safe_load(options_file)
             if options_data:
                 response[field] = {"type": "select", "options": list(options_data.keys())}
@@ -206,7 +206,7 @@ class NamingService:
 
             else:
                 user_input = kwargs.get(field, "")
-                mapping_file = os.path.join(self.base_path, f"{field}s.json")
+                mapping_file = os.path.join(self.base_path, f"{field}.json")
                 mapping = self._safe_load(mapping_file)
                 values[field] = mapping.get(user_input, user_input)
 
@@ -254,5 +254,57 @@ class NamingService:
         }
 
 
+#admin methods to get and update raw field data (for admin interface)
+
+
+
+    def get_raw_fields(self):
+        result = {}
+
+        if not os.path.exists(self.base_path):
+            return {"error": "Base path does not exist"}
+
+        for filename in os.listdir(self.base_path):
+            if not filename.endswith(".json"):
+                continue
+
+            field_name = filename[:-5]  # remove ".json"
+
+            file_path = os.path.join(self.base_path, filename)
+            data = self._safe_load(file_path)
+
+            result[field_name] = data if data else {}
+
+        return {
+            "format": self.format,
+            "fields": result
+        }
+    
+    def update_raw_field(self, field: str, new_data: dict):
+        if field not in self.fields:
+            return {"error": f"Invalid field: {field}"}
+
+        if not isinstance(new_data, dict):
+            return {"error": "Payload must be a JSON object"}
+
+        file_path = os.path.join(self.base_path, f"{field}.json")
+
+        # Optional lightweight validation (keep your <Short> pattern consistent)
+        for key, value in new_data.items():
+            if f"<{value}>" not in key:
+                return {
+                    "error": f"Key '{key}' must contain '<{value}>' to match format"
+                }
+
+        # Optional: auto-sort before saving (keeps everything clean)
+        sorted_data = dict(sorted(new_data.items(), key=lambda x: x[0]))
+
+        self._safe_save(file_path, sorted_data)
+
+        return {
+            "message": f"{field} updated successfully",
+            "total_entries": len(sorted_data)
+        }
 
 #end of NamingService class
+

@@ -111,3 +111,17 @@ def validate_name(component: str, body: NameInput):
 @router.get("/stats")
 def get_stats():
     return NamingService().get_stats()
+
+
+    # ---------------------------
+    # admin end points  
+    # ---------------------------
+
+@router.get("/fields/{field}/raw")
+def get_raw_field(field: str):
+    return NamingService().get_raw_field(field)
+
+
+@router.put("/fields/{field}/raw")
+def update_raw_field(field: str, payload: dict):
+    return NamingService().update_raw_field(field, payload)

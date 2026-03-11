@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin - Pending Variables</title>
+  <title>Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <link href="style.css" rel="stylesheet"/>
   <style>
@@ -35,7 +35,7 @@
   <div class="container">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h3 class="card-title">Pending Variable Approvals</h3>
+        <h3 class="card-title">Add Edit Update Fields</h3>
 
         <div id="standards-list" class="mb-3">
           <!-- Bootstrap buttons will be injected here -->
@@ -61,123 +61,111 @@
   </div>
 
   <script>
-    const BACKEND_URL = "http://192.168.10.71:8000";
+    const BACKEND_URL = "http://192.168.10.51:8080";  // 🔒 hardcoded backend URL
     const standardsContainer = document.getElementById("standards-list");
     const pendingList = document.getElementById("pending-list");
     const actionButtons = document.getElementById("action-buttons");
     const selectedStandardDiv = document.getElementById("selected-standard");
-    let currentStandard = "";
 
-    async function loadStandards() {
+    let currentField = "";
+
+    // Load dynamic fields from backend
+    async function loadFields() {
       try {
-        const res = await fetch(`${BACKEND_URL}/standards`);
+        const res = await fetch(`${BACKEND_URL}/fields`);
         if (!res.ok) {
-          console.error("Failed to fetch standards", res.status);
+          console.error("Failed to fetch fields");
           return;
         }
+
         const data = await res.json();
-        const arr = data.standards || [];
-        arr.forEach(std => {
+        const fieldsObj = data.fields || {};
+
+        Object.entries(fieldsObj).forEach(([field, config]) => {
+          if (config.type !== "select") return;   // 🔒 only select fields
+
           const btn = document.createElement("button");
           btn.className = "btn btn-outline-primary standard-btn";
-          btn.innerText = std.toUpperCase();
-          btn.dataset.std = std;
-          btn.addEventListener("click", () => selectStandard(std));
+          btn.innerText = field.toUpperCase();
+          btn.addEventListener("click", () => selectField(field));
           standardsContainer.appendChild(btn);
         });
+
       } catch (err) {
-        console.error("Error loading standards", err);
+        console.error("Error loading fields", err);
       }
     }
 
-    async function selectStandard(std) {
-      currentStandard = std;
-      selectedStandardDiv.innerText = `Selected Standard: ${std.toUpperCase()}`;
+    async function selectField(field) {
+      currentField = field;
+      selectedStandardDiv.innerText = `Editing Field: ${field.toUpperCase()}`;
       pendingList.innerHTML = "";
       actionButtons.classList.add("d-none");
 
       try {
-        const res = await fetch(`${BACKEND_URL}/pending/${std}`);
+        const res = await fetch(`${BACKEND_URL}/fields/${field}/raw`);
         if (!res.ok) {
-          console.error("Failed fetching pending", std, res.status);
+          pendingList.innerHTML = `<li>Error loading data</li>`;
           return;
         }
+
         const data = await res.json();
-        if (!data || Object.keys(data).length === 0) {
-          pendingList.innerHTML = `<li><em>No pending variables.</em></li>`;
-        } else {
-          for (const v in data) {
-            const li = document.createElement("li");
 
-            const label = document.createElement("label");
-            label.style.cursor = "pointer"; // shows hand cursor when hovering
-            label.classList.add("d-block"); // full width clickable area
+        const li = document.createElement("li");
 
-            const cb = document.createElement("input");
-            cb.type = "checkbox";
-            cb.value = v;
-            cb.classList.add("me-2");
+        const textarea = document.createElement("textarea");
+        textarea.className = "form-control";
+        textarea.rows = 20;
+        textarea.id = "json-editor";
+        textarea.value = JSON.stringify(data.data || {}, null, 2);
 
-            // Append checkbox and text to the label
-            label.appendChild(cb);
-            label.appendChild(document.createTextNode(`${v} — ${data[v]}`));
+        li.appendChild(textarea);
+        pendingList.appendChild(li);
 
-            // Append label to list item
-            li.appendChild(label);
-            pendingList.appendChild(li);
-          }
+        // Replace old action buttons with Save only
+        actionButtons.innerHTML = `
+          <button class="btn btn-success" id="save-btn">
+            Save Changes
+          </button>
+        `;
 
-        }
         actionButtons.classList.remove("d-none");
+
+        document.getElementById("save-btn")
+          .addEventListener("click", saveChanges);
+
       } catch (err) {
-        console.error("Error in selectStandard", err);
+        console.error("Error loading field", err);
       }
     }
 
-    document.getElementById("select-all-btn").addEventListener("click", () => {
-      const cbs = document.querySelectorAll("#pending-list input[type=checkbox]");
-      const allChecked = Array.from(cbs).every(cb => cb.checked);
-      cbs.forEach(cb => (cb.checked = !allChecked));
-    });
+    async function saveChanges() {
+      const textarea = document.getElementById("json-editor");
 
-    document.getElementById("approve-btn").addEventListener("click", async () => {
-      const selected = Array.from(
-        document.querySelectorAll("#pending-list input:checked")
-      ).map(cb => cb.value);
-      if (selected.length === 0) return alert("No variables selected.");
-      const res = await fetch(`${BACKEND_URL}/admin/actions/${currentStandard}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variables: selected, action: "approve" }),
-      });
-      if (res.ok) {
-        alert("Approved!");
-        selectStandard(currentStandard);
-      } else {
-        alert("Failed to approve.");
+      let parsed;
+      try {
+        parsed = JSON.parse(textarea.value);
+      } catch (err) {
+        alert("Invalid JSON format.");
+        return;
       }
-    });
 
-    document.getElementById("delete-btn").addEventListener("click", async () => {
-      const selected = Array.from(
-        document.querySelectorAll("#pending-list input:checked")
-      ).map(cb => cb.value);
-      if (selected.length === 0) return alert("No variables selected.");
-      const res = await fetch(`${BACKEND_URL}/admin/actions/${currentStandard}`, {
-        method: "POST",
+      const res = await fetch(`${BACKEND_URL}/fields/${currentField}/raw`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variables: selected, action: "delete" }),
+        body: JSON.stringify(parsed),
       });
-      if (res.ok) {
-        alert("Deleted!");
-        selectStandard(currentStandard);
-      } else {
-        alert("Delete failed.");
-      }
-    });
 
-    document.addEventListener("DOMContentLoaded", loadStandards);
+      const responseData = await res.json();
+
+      if (res.ok) {
+        alert("Updated successfully! Total entries: " + responseData.total_entries);
+      } else {
+        alert("Error: " + (responseData.error || "Update failed"));
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadFields);
   </script>
-  
 </body>
 </html>

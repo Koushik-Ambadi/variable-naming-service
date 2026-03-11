@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://192.168.9.253:8080";
+const BACKEND_URL = "http://192.168.10.51:8080";
 
 const fieldsContainer = document.getElementById('fields-container');
 const abbreviationsContainer = document.getElementById('abbreviations-container');
@@ -129,7 +129,10 @@ function renderAbbreviationCards(wordsOptions) {
             radio.name = word;
             radio.value = opt.value;
             radio.style.marginRight = '5px';
-            if (opt.conflict) radio.dataset.conflict = "true";
+            if (opt.conflict) {
+                radio.dataset.conflict = "true";
+                radio.dataset.conflictWords = JSON.stringify(opt.conflict_words || []);
+            }
 
             radio.addEventListener('change', () => {
                 selectedOptions[word] = opt.value;
@@ -152,7 +155,8 @@ function renderAbbreviationCards(wordsOptions) {
             }
             if (opt.conflict) {
                 const conflict = document.createElement('span');
-                conflict.textContent = 'conflict';
+                const words = opt.conflict_words?.join(", ");
+                conflict.textContent = `conflict (${words})`;
                 conflict.classList.add('conflict');
                 labelsContainer.appendChild(conflict);
             }
@@ -172,21 +176,31 @@ function renderAbbreviationCards(wordsOptions) {
 // Check for conflicts
 // ---------------------------
 function checkConflicts() {
-    let conflictExists = false;
+    let conflictMessages = [];
 
     for (const word in wordsOptionsData) {
         const radios = document.getElementsByName(word);
+
         radios.forEach(r => {
             if (r.checked && r.dataset.conflict === "true") {
-                conflictExists = true;
-                warningBox.textContent =
-                    `Conflict detected: abbreviation "${r.value}" for word "${word}" is already in use.`;
-                warningBox.style.display = 'block';
+                const conflictWords = JSON.parse(r.dataset.conflictWords || "[]");
+
+                conflictMessages.push(
+                    `Abbreviation "${r.value}" for word "${word}" is already used by: ${conflictWords.join(", ")}`
+                );
             }
         });
     }
 
-    if (!conflictExists) warningBox.style.display = 'none';
+    if (conflictMessages.length > 0) {
+        warningBox.innerHTML = conflictMessages
+            .map(msg => `<div class="alert alert-warning mt-2">${msg}</div>`)
+            .join("");
+        warningBox.style.display = "block";
+    } else {
+        warningBox.style.display = "none";
+        warningBox.innerHTML = "";
+    }
 }
 
 // ---------------------------
