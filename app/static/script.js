@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://192.168.10.71:8000";
+const BACKEND_URL = window.location.origin;
 
 const fieldsContainer = document.getElementById('fields-container');
 const abbreviationsContainer = document.getElementById('abbreviations-container');
